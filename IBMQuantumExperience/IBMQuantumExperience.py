@@ -1607,8 +1607,76 @@ class IBMQuantumExperience(object):
             return {"error": "Not credentials valid"}
 
         project = self.req.get('/Network/{}/Groups/{}/Projects/{}'
-                                .format(hub_name, group_name, project_name))
+                               .format(hub_name, group_name, project_name))
         return project
+
+    def get_my_projects_in_group_in_hub(self, hub_name, group_name,
+                                        access_token=None,
+                                        user_id=None):
+        """
+        Get all my projects within a group in a hub
+        by using the hub's and group's name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        projects = self.req.get('/Network/{}/Groups/{}/Projects/mine'
+                                .format(hub_name, group_name))
+        return projects
+
+    def get_my_roles_in_group(self, hub_name, group_name,
+                              access_token=None,
+                              user_id=None):
+        """
+        Get my roles within a group in a hub
+        by using the hub's and group's name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        roles = self.req.get('/Network/{}/Groups/{}/roles'
+                             .format(hub_name, group_name))
+        return roles
+
+    def get_my_groups_in_hub(self, hub_name,
+                             access_token=None,
+                             user_id=None):
+        """
+        Get my groups within a hub
+        by using the hub's name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        groups = self.req.get('/Network/{}/Groups/mine'
+                              .format(hub_name))
+        return groups
+
+    def get_my_hubs(self, access_token=None, user_id=None):
+        """
+        Get all my hubs
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        hubs = self.req.get('/Network/mine')
+        return hubs
 
 
 class ApiError(Exception):
