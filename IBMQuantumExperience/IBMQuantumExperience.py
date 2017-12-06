@@ -576,7 +576,8 @@ class IBMQuantumExperience(object):
             return respond
 
     def run_job(self, qasms, backend='simulator', shots=1,
-                max_credits=3, seed=None, access_token=None, user_id=None):
+                max_credits=3, seed=None, hub=None, group=None,
+                project=None, access_token=None, user_id=None):
         """
         Execute a job
         """
@@ -605,7 +606,19 @@ class IBMQuantumExperience(object):
             return {"error": "Not seed allowed. Max 10 digits."}
 
         data['backend']['name'] = backend_type
-        job = self.req.post('/Jobs', data=json.dumps(data))
+
+        if ((hub is not None) and (group is not None)
+                and (project is not None)):
+
+            if backend == 'simulator':
+                return {"error": "Invalid backend (simulator) for execution"
+                                 " in hubs/groups/project"}
+            job = self.req.post('/Network/{}/Groups/{}/Projects/{}/jobs'
+                                .format(hub, group, project),
+                                data=json.dumps(data))
+        else:
+            job = self.req.post('/Jobs', data=json.dumps(data))
+
         return job
 
     def get_job(self, id_job, hub=None, group=None, project=None,
