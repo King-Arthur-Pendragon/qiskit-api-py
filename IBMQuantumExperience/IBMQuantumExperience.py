@@ -21,7 +21,7 @@ class _Credentials(object):
     """
     The Credential class to manage the tokens
     """
-    config_base = {'url': 'https://quantumexperience.ng.bluemix.net/api'}
+    config_base = {'url': 'https:///qcwi-lsf.mybluemix.net/api'}
 
     def __init__(self, token, config=None, verify=True):
         self.token_unique = token
@@ -62,9 +62,9 @@ class _Credentials(object):
         headers = {'x-qx-client-application': client_application}
         if self.token_unique:
             self.data_credentials = requests.post(str(self.config.get('url') +
-                                                  "/users/loginWithToken"),
+                                                      "/users/loginWithToken"),
                                                   data={'apiToken':
-                                                        self.token_unique},
+                                                            self.token_unique},
                                                   verify=self.verify,
                                                   headers=headers).json()
         elif config and ("email" in config) and ("password" in config):
@@ -75,7 +75,7 @@ class _Credentials(object):
                 'password': password
             }
             self.data_credentials = requests.post(str(self.config.get('url') +
-                                                  "/users/login"),
+                                                      "/users/login"),
                                                   data=credentials,
                                                   verify=self.verify,
                                                   headers=headers).json()
@@ -178,7 +178,7 @@ class _Request(object):
 
         # timed out
         raise ApiError(usr_msg='Failed to get proper ' +
-                       'response from backend.')
+                               'response from backend.')
 
     def put(self, path, params='', data=None):
         """
@@ -193,10 +193,10 @@ class _Request(object):
         retries = self.retries
         while retries > 0:
             respond = requests.put(url, data=data, headers=headers,
-                                    verify=self.verify)
+                                   verify=self.verify)
             if not self.check_token(respond):
                 respond = requests.put(url, data=data, headers=headers,
-                                        verify=self.verify)
+                                       verify=self.verify)
             if self._response_good(respond):
                 if self.result:
                     return self.result
@@ -209,7 +209,7 @@ class _Request(object):
                 time.sleep(self.timeout_interval)
         # timed out
         raise ApiError(usr_msg='Failed to get proper ' +
-                       'response from backend.')
+                               'response from backend.')
 
     def get(self, path, params='', with_token=True):
         """
@@ -241,7 +241,7 @@ class _Request(object):
                 time.sleep(self.timeout_interval)
         # timed out
         raise ApiError(usr_msg='Failed to get proper ' +
-                       'response from backend.')
+                               'response from backend.')
 
     def delete(self, path, params=''):
         """
@@ -255,10 +255,10 @@ class _Request(object):
         retries = self.retries
         while retries > 0:
             respond = requests.delete(url, headers=headers,
-                                    verify=self.verify)
+                                      verify=self.verify)
             if not self.check_token(respond):
                 respond = requests.delete(url, headers=headers,
-                                        verify=self.verify)
+                                          verify=self.verify)
             if self._response_good(respond):
                 if self.result:
                     return self.result
@@ -269,7 +269,7 @@ class _Request(object):
                 time.sleep(self.timeout_interval)
         # timed out
         raise ApiError(usr_msg='Failed to get proper ' +
-                       'response from backend.')
+                               'response from backend.')
 
     def _response_good(self, respond):
         """check response
@@ -675,7 +675,7 @@ class IBMQuantumExperience(object):
             ret['busy'] = bool(status['busy'])
         if 'lengthQueue' in status:
             ret['pending_jobs'] = status['lengthQueue']
-        
+
         ret['backend'] = backend_type
 
         return ret
@@ -792,7 +792,6 @@ class IBMQuantumExperience(object):
     '''
     Methods to run by admins, to manage users
     '''
-
 
     def _get_user_id_from_email(self, email):
         """
@@ -1013,7 +1012,7 @@ class IBMQuantumExperience(object):
             return user
         else:
             raise ApiError(usr_msg='User group doesnt exist ' +
-                           name_user_group)
+                                   name_user_group)
 
     def unset_user_group(self, email, name_user_group,
                          access_token=None, user_id=None):
@@ -1038,7 +1037,7 @@ class IBMQuantumExperience(object):
             return user
         else:
             raise ApiError(usr_msg='User group or user doesnt exist ' +
-                           name_user_group + ":" + email)
+                                   name_user_group + ":" + email)
 
     def get_topologies(self, access_token=None, user_id=None):
         """
@@ -1315,7 +1314,7 @@ class IBMQuantumExperience(object):
             return tug
         else:
             raise ApiError(usr_msg='User group or topology doesnt exist ' +
-                           name_user_group + ":" + name_topology)
+                                   name_user_group + ":" + name_topology)
 
     def unset_user_group_to_topology(self, name_topology=None,
                                      name_user_group=None,
@@ -1397,18 +1396,18 @@ class IBMQuantumExperience(object):
 
         if ((type_device != 'Simulator') and (type_device != 'Real')):
             return {"error": "Not type of the device valid: " + type_device +
-                    ". Only allowed 'Simulator' or 'Real'"}
+                             ". Only allowed 'Simulator' or 'Real'"}
 
         if ((status != 'On') and (status != 'Off')):
             return {"error": "Not status of the device valid: " + type_device +
-                    ". Only allowed 'On' or 'Off'"}
+                             ". Only allowed 'On' or 'Off'"}
 
         if date_online:
             try:
                 datetime.strptime(date_online, "%Y-%m-%dT%H:%M:%S.%fZ")
             except ValueError:
                 return {"error": "Not date_online valid in ISO Format" +
-                        " (YYYY-MM-DDTHH:mm:ss.sssZ): " + date_online}
+                                 " (YYYY-MM-DDTHH:mm:ss.sssZ): " + date_online}
 
         data = {
             'name': name,
@@ -1458,15 +1457,15 @@ class IBMQuantumExperience(object):
         if type_device:
             if ((type_device != 'Simulator') and (type_device != 'Real')):
                 return {"error": "Not type of the device valid: " +
-                        type_device +
-                        ". Only allowed 'Simulator' or 'Real'"}
+                                 type_device +
+                                 ". Only allowed 'Simulator' or 'Real'"}
             data["type"] = type_device
 
         if status:
             if ((status != 'On') and (status != 'Off')):
                 return {"error": "Not status of the device valid: " +
-                        type_device +
-                        ". Only allowed 'On' or 'Off'"}
+                                 type_device +
+                                 ". Only allowed 'On' or 'Off'"}
             data["status"] = status
 
         if date_online:
@@ -1474,7 +1473,7 @@ class IBMQuantumExperience(object):
                 datetime.strptime(date_online, "%Y-%m-%dT%H:%M:%S.%fZ")
             except ValueError:
                 return {"error": "Not date_online valid in ISO Format" +
-                        " (YYYY-MM-DDTHH:mm:ss.sssZ): " + date_online}
+                                 " (YYYY-MM-DDTHH:mm:ss.sssZ): " + date_online}
 
         if serial_number:
             data["serialNumber"] = serial_number
@@ -1499,6 +1498,101 @@ class IBMQuantumExperience(object):
 
         backend = self.req.put('/Devices/' + data["id"], data=json.dumps(data))
         return backend
+
+    def get_hub_by_name(self, name,
+                        access_token=None, user_id=None):
+        """
+        Get a hub by name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        hub = self.req.get('/Network/' + str(name))
+        return hub
+
+    def get_hubs(self, access_token=None, user_id=None):
+        """
+        Get all hubs in the system
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        hubs = self.req.get('/Network')
+        return hubs
+
+    def get_groups_in_hub(self, name,
+                          access_token=None, user_id=None):
+        """
+        Get all groups within a hub by using the hub's name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        groups = self.req.get('/Network/{}/Groups'.format(name))
+        return groups
+
+    def get_group_in_hub_by_name(self, hub_name, group_name,
+                                 access_token=None, user_id=None):
+        """
+        Get a specific group within a hub
+        by using the hub's and group's name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        group = self.req.get('/Network/{}/Groups/{}'.format(hub_name, group_name))
+        return group
+
+    def get_projects_in_group_in_hub(self, hub_name, group_name,
+                                     access_token=None, user_id=None):
+        """
+        Get all projects within a specific group in a hub
+        by using the hub's and group's name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        projects = self.req.get('/Network/{}/Groups/{}/Projects'
+                                .format(hub_name, group_name))
+        return projects
+
+    def get_project_in_group_in_hub_by_name(self, hub_name, group_name,
+                                            project_name, access_token=None,
+                                            user_id=None):
+        """
+        Get a specific project within a group in a hub
+        by using the hub's, group's and project's name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        project = self.req.get('/Network/{}/Groups/{}/Projects/{}'
+                                .format(hub_name, group_name, project_name))
+        return project
 
 
 class ApiError(Exception):
