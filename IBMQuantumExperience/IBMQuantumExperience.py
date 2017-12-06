@@ -608,7 +608,8 @@ class IBMQuantumExperience(object):
         job = self.req.post('/Jobs', data=json.dumps(data))
         return job
 
-    def get_job(self, id_job, access_token=None, user_id=None):
+    def get_job(self, id_job, hub=None, group=None, project=None,
+                access_token=None, user_id=None):
         """
         Get the information about a job, by its id
         """
@@ -626,7 +627,13 @@ class IBMQuantumExperience(object):
             respond["status"] = 'Error'
             respond["error"] = "Job ID not specified"
             return respond
-        job = self.req.get('/Jobs/' + id_job)
+
+        if ((hub is not None) and (group is not None) and
+                (project is not None)):
+            job = self.req.get('/Network/{}/Groups/{}/Projects/{}/jobs/{}'
+                               .format(hub, group, project, id_job))
+        else:
+            job = self.req.get('/Jobs/' + id_job)
 
         # To remove result object and add the attributes to data object
         if 'qasms' in job:
