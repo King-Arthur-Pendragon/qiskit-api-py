@@ -609,10 +609,6 @@ class IBMQuantumExperience(object):
 
         if ((hub is not None) and (group is not None)
                 and (project is not None)):
-
-            if backend == 'simulator':
-                return {"error": "Invalid backend (simulator) for execution"
-                                 " in hubs/groups/project"}
             job = self.req.post('/Network/{}/Groups/{}/Projects/{}/jobs'
                                 .format(hub, group, project),
                                 data=json.dumps(data))
