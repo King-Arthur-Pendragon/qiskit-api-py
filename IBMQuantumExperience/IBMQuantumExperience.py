@@ -1577,10 +1577,12 @@ class IBMQuantumExperience(object):
         if not self.check_credentials():
             return {"error": "Not credentials valid"}
 
-        data = {
-            'title': title,
-            'description': description
-        }
+        data = {}
+
+        if title:
+            data["title"] = title
+        if description:
+            data["description"] = description
 
         hub = self.req.put('/Network/{}/'.format(name),
                            data=json.dumps(data))
@@ -1715,10 +1717,12 @@ class IBMQuantumExperience(object):
         if not self.check_credentials():
             return {"error": "Not credentials valid"}
 
-        data = {
-            'title': title,
-            'description': description
-        }
+        data = {}
+
+        if title:
+            data["title"] = title
+        if description:
+            data["description"] = description
 
         group = self.req.put('/Network/{}/Groups/{}'.format(hub, group),
                              data=json.dumps(data))
@@ -1864,10 +1868,12 @@ class IBMQuantumExperience(object):
         if not self.check_credentials():
             return {"error": "Not credentials valid"}
 
-        data = {
-            'title': title,
-            'description': description
-        }
+        data = {}
+
+        if title:
+            data["title"] = title
+        if description:
+            data["description"] = description
 
         project = self.req.put('/Network/{}/Groups/{}/Projects/{}'
                                .format(hub, group, project),
