@@ -1927,6 +1927,47 @@ class IBMQuantumExperience(object):
                                data=json.dumps(data))
         return project
 
+    def add_device_to_project_in_group_in_hub(self, hub, group, project,
+                                              device, priority,
+                                              access_token=None,
+                                              user_id=None):
+        """
+        Add a device to a project in a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {
+            'name': device,
+            'priority': priority
+        }
+
+        device = self.req.post('/Network/{}/Groups/{}/Projects/{}/devices'
+                               .format(hub, group, project),
+                               data=json.dumps(data))
+        return device
+
+    def remove_device_from_project_in_group_in_hub(self, hub, group, project,
+                                                   device, access_token=None,
+                                                   user_id=None):
+        """
+        Remove a device from a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        device = self.req.delete('/Network/{}/Groups/{}/Projects/{}/devices/{}'
+                                 .format(hub, group, project, device))
+        return device
+
     def get_my_projects_in_group_in_hub(self, hub_name, group_name,
                                         access_token=None,
                                         user_id=None):
