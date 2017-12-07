@@ -1515,6 +1515,41 @@ class IBMQuantumExperience(object):
         backend = self.req.put('/Devices/' + data["id"], data=json.dumps(data))
         return backend
 
+    def get_hubs(self, access_token=None, user_id=None):
+        """
+        Get all hubs in the system
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        hubs = self.req.get('/Network')
+        return hubs
+
+    def create_hub(self, name, title, description,
+                   access_token=None, user_id=None):
+        """
+        Create a backend by admin
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {
+            'name': name,
+            'title': title,
+            'description': description
+        }
+
+        hub = self.req.post('/Network', data=json.dumps(data))
+        return hub
+
     def get_hub_by_name(self, name,
                         access_token=None, user_id=None):
         """
@@ -1530,9 +1565,9 @@ class IBMQuantumExperience(object):
         hub = self.req.get('/Network/' + str(name))
         return hub
 
-    def get_hubs(self, access_token=None, user_id=None):
+    def delete_hub_by_name(self, name, access_token=None, user_id=None):
         """
-        Get all hubs in the system
+        Delete a hub by name
         """
         if access_token:
             self.req.credential.set_token(access_token)
@@ -1541,8 +1576,8 @@ class IBMQuantumExperience(object):
         if not self.check_credentials():
             return {"error": "Not credentials valid"}
 
-        hubs = self.req.get('/Network')
-        return hubs
+        hub = self.req.delete('/Network/' + str(name))
+        return hub
 
     def get_groups_in_hub(self, name,
                           access_token=None, user_id=None):
