@@ -1614,8 +1614,8 @@ class IBMQuantumExperience(object):
                                data=json.dumps(data))
         return device
 
-    def remove_device_in_hub(self, hub, device,
-                             access_token=None, user_id=None):
+    def remove_device_from_hub(self, hub, device,
+                               access_token=None, user_id=None):
         """
         Create a device within a hub
         """
