@@ -1851,6 +1851,29 @@ class IBMQuantumExperience(object):
                                   .format(hub, group, project))
         return project
 
+    def edit_project_in_group_in_hub(self, hub, group, project, title,
+                                     description, access_token=None,
+                                     user_id=None):
+        """
+        Edit a project in a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {
+            'title': title,
+            'description': description
+        }
+
+        project = self.req.put('/Network/{}/Groups/{}/Projects/{}'
+                               .format(hub, group, project),
+                               data=json.dumps(data))
+        return project
+
     def get_my_projects_in_group_in_hub(self, hub_name, group_name,
                                         access_token=None,
                                         user_id=None):
