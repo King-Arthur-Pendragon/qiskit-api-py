@@ -17,6 +17,47 @@ logging.basicConfig()
 CLIENT_APPLICATION = 'qiskit-api-py'
 
 
+def get_job_url(config, hub, group, project):
+    """
+    Util method to get job url
+    """
+    if ((config is not None) and ('hub' in config) and (hub is None)):
+        hub = config["hub"]
+    if ((config is not None) and ('group' in config) and (group is None)):
+        group = config["group"]
+    if ((config is not None) and ('project' in config) and (project is None)):
+        project = config["project"]
+    if ((hub is not None) and (group is not None) and (project is not None)):
+        return '/Network/{}/Groups/{}/Projects/{}/jobs'.format(hub, group, project)
+    return '/Jobs'
+
+
+def get_backend_stats_url(config, hub, backend_type):
+    """
+    Util method to get backend stats url
+    """
+    if ((config is not None) and ('hub' in config) and (hub is None)):
+        hub = config["hub"]
+    if (hub is not None):
+        return '/Network/{}/devices/{}'.format(hub, backend_type)
+    return '/Backends/{}'.format(backend_type)
+
+
+def get_backend_url(config, hub, group, project):
+    """
+    Util method to get backend url
+    """
+    if ((config is not None) and ('hub' in config) and (hub is None)):
+        hub = config["hub"]
+    if ((config is not None) and ('group' in config) and (group is None)):
+        group = config["group"]
+    if ((config is not None) and ('project' in config) and (project is None)):
+        project = config["project"]
+    if ((hub is not None) and (group is not None) and (project is not None)):
+        return '/Network/{}/Groups/{}/Projects/{}/devices'.format(hub, group, project)
+    return '/Backends'
+
+
 class _Credentials(object):
     """
     The Credential class to manage the tokens
@@ -350,6 +391,8 @@ class IBMQuantumExperience(object):
 
     def __init__(self, token=None, config=None, verify=True):
         """ If verify is set to false, ignore SSL certificate errors """
+        """ If verify is set to false, ignore SSL certificate errors """
+        self.config = config
         self.req = _Request(token, config=config, verify=verify)
 
     def _check_backend(self, backend, endpoint):
@@ -696,7 +739,7 @@ class IBMQuantumExperience(object):
 
         return ret
 
-    def backend_calibration(self, backend='ibmqx4', access_token=None, user_id=None):
+    def backend_calibration(self, backend='ibmqx4', hub=None, access_token=None, user_id=None):
         """
         Get the calibration of a real chip
         """
@@ -717,12 +760,12 @@ class IBMQuantumExperience(object):
             ret["backend"] = backend_type
             ret["calibrations"] = None
             return ret
-
-        ret = self.req.get('/Backends/' + backend_type + '/calibration')
+        url = get_backend_stats_url(self.config, hub, backend_type)
+        ret = self.req.get(url + '/calibration')
         ret["backend"] = backend_type
         return ret
 
-    def backend_parameters(self, backend='ibmqx4', access_token=None, user_id=None):
+    def backend_parameters(self, backend='ibmqx4', hub=None, access_token=None, user_id=None):
         """
         Get the parameters of calibration of a real chip
         """
@@ -744,11 +787,13 @@ class IBMQuantumExperience(object):
             ret["parameters"] = None
             return ret
 
-        ret = self.req.get('/Backends/' + backend_type + '/parameters')
+        url = get_backend_stats_url(self.config, hub, backend_type)
+
+        ret = self.req.get(url + '/parameters')
         ret["backend"] = backend_type
         return ret
 
-    def available_backends(self, access_token=None, user_id=None):
+    def available_backends(self, hub=None, group=None, project=None, access_token=None, user_id=None):
         """
         Get the backends available to use in the QX Platform
         """
@@ -759,7 +804,9 @@ class IBMQuantumExperience(object):
         if not self.check_credentials():
             raise CredentialsError('credentials invalid')
         else:
-            return [backend for backend in self.req.get('/Backends')
+            url = get_backend_url(self.config, hub, group, project)
+
+            return [backend for backend in self.req.get(url)
                     if backend.get('status') == 'on']
 
     def available_backend_simulators(self, access_token=None, user_id=None):
