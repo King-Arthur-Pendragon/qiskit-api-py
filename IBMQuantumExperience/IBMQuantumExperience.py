@@ -1579,6 +1579,56 @@ class IBMQuantumExperience(object):
         hub = self.req.delete('/Network/' + str(name))
         return hub
 
+    def get_devices_in_hub(self, hub, access_token=None, user_id=None):
+        """
+        Get all devices in the hub using hub's name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        devices = self.req.get('/Network/{}/devices'.format(hub))
+        return devices
+
+    def create_device_in_hub(self, hub, device, priority,
+                             access_token=None, user_id=None):
+        """
+        Create a device within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {
+            'name': device,
+            'priority': priority
+        }
+
+        device = self.req.post('/Network/{}/devices'.format(hub),
+                               data=json.dumps(data))
+        return device
+
+    def remove_device_in_hub(self, hub, device,
+                             access_token=None, user_id=None):
+        """
+        Create a device within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        device = self.req.delete('/Network/{}/devices/{}'.format(hub, device))
+        return device
+
     def get_groups_in_hub(self, name,
                           access_token=None, user_id=None):
         """
