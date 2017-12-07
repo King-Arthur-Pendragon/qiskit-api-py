@@ -1565,9 +1565,9 @@ class IBMQuantumExperience(object):
         hub = self.req.get('/Network/' + str(name))
         return hub
 
-    def delete_hub_by_name(self, name, access_token=None, user_id=None):
+    def remove_hub_by_name(self, name, access_token=None, user_id=None):
         """
-        Delete a hub by name
+        Remove a hub by name
         """
         if access_token:
             self.req.credential.set_token(access_token)
