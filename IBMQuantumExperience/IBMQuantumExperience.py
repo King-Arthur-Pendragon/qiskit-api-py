@@ -391,7 +391,6 @@ class IBMQuantumExperience(object):
 
     def __init__(self, token=None, config=None, verify=True):
         """ If verify is set to false, ignore SSL certificate errors """
-        """ If verify is set to false, ignore SSL certificate errors """
         self.config = config
         self.req = _Request(token, config=config, verify=verify)
 
