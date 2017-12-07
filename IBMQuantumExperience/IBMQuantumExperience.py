@@ -1565,6 +1565,27 @@ class IBMQuantumExperience(object):
         hub = self.req.get('/Network/' + str(name))
         return hub
 
+    def edit_hub(self, name, title, description,
+                 access_token=None, user_id=None):
+        """
+        Edit a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {
+            'title': title,
+            'description': description
+        }
+
+        hub = self.req.put('/Network/{}/'.format(name),
+                           data=json.dumps(data))
+        return hub
+
     def remove_hub_by_name(self, name, access_token=None, user_id=None):
         """
         Remove a hub by name
@@ -1685,7 +1706,7 @@ class IBMQuantumExperience(object):
     def edit_group_in_hub(self, hub, group, title, description,
                           access_token=None, user_id=None):
         """
-        Create a group within a hub
+        Edit a group within a hub
         """
         if access_token:
             self.req.credential.set_token(access_token)
