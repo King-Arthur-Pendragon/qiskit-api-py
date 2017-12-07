@@ -62,7 +62,7 @@ class _Credentials(object):
     """
     The Credential class to manage the tokens
     """
-    config_base = {'url': 'https:///qcwi-lsf.mybluemix.net/api'}
+    config_base = {'url': 'https://quantumexperience.ng.bluemix.net/api'}
 
     def __init__(self, token, config=None, verify=True):
         self.token_unique = token
@@ -93,7 +93,6 @@ class _Credentials(object):
 
     def obtain_token(self, config=None):
         """Obtain the token to access to QX Platform.
-
         Raises:
             CredentialsError: when token is invalid.
         """
@@ -314,13 +313,10 @@ class _Request(object):
 
     def _response_good(self, respond):
         """check response
-
         Args:
             respond (str): HTTP response.
-
         Returns:
             bool: True if the response is good, else False.
-
         Raises:
             ApiError: response isn't formatted properly.
         """
@@ -357,18 +353,14 @@ class _Request(object):
 
     def _parse_response(self, respond):
         """parse text of response for HTTP errors
-
         This parses the text of the response to decide whether to
         retry request or raise exception. At the moment this only
         detects an exception condition.
-
         Args:
             respond (Response): requests.Response object
-
         Returns:
             bool: False if the request should be retried, True
                 if not.
-
         Raises:
             RegisterSizeError
         """
@@ -649,13 +641,9 @@ class IBMQuantumExperience(object):
 
         data['backend']['name'] = backend_type
 
-        if ((hub is not None) and (group is not None)
-                and (project is not None)):
-            job = self.req.post('/Network/{}/Groups/{}/Projects/{}/jobs'
-                                .format(hub, group, project),
-                                data=json.dumps(data))
-        else:
-            job = self.req.post('/Jobs', data=json.dumps(data))
+        url = get_job_url(self.config, hub, group, project)
+
+        job = self.req.post(url, data=json.dumps(data))
 
         return job
 
@@ -679,12 +667,11 @@ class IBMQuantumExperience(object):
             respond["error"] = "Job ID not specified"
             return respond
 
-        if ((hub is not None) and (group is not None) and
-                (project is not None)):
-            job = self.req.get('/Network/{}/Groups/{}/Projects/{}/jobs/{}'
-                               .format(hub, group, project, id_job))
-        else:
-            job = self.req.get('/Jobs/' + id_job)
+        url = get_job_url(self.config, hub, group, project)
+
+        url += '/' + id_job
+
+        job = self.req.get(url)
 
         # To remove result object and add the attributes to data object
         if 'qasms' in job:
@@ -805,7 +792,10 @@ class IBMQuantumExperience(object):
         else:
             url = get_backend_url(self.config, hub, group, project)
 
-            return [backend for backend in self.req.get(url)
+            ret = self.req.get(url)
+            if (ret is not None) and (isinstance(ret, dict)):
+                return []
+            return [backend for backend in ret
                     if backend.get('status') == 'on']
 
     def available_backend_simulators(self, access_token=None, user_id=None):
@@ -819,7 +809,10 @@ class IBMQuantumExperience(object):
         if not self.check_credentials():
             raise CredentialsError('credentials invalid')
         else:
-            return [backend for backend in self.req.get('/Backends')
+            ret = self.req.get('/Backends')
+            if (ret is not None) and (isinstance(ret, dict)):
+                return []
+            return [backend for backend in ret
                     if backend.get('status') == 'on' and
                     backend.get('simulator') is True]
 
