@@ -1968,30 +1968,11 @@ class IBMQuantumExperience(object):
                                  .format(hub, group, project, device))
         return device
 
-    def get_my_projects_in_group_in_hub(self, hub_name, group_name,
-                                        access_token=None,
-                                        user_id=None):
+    def add_user_to_project_in_group_in_hub(self, hub, group, project,
+                                            email, access_token=None,
+                                            user_id=None):
         """
-        Get all my projects within a group in a hub
-        by using the hub's and group's name
-        """
-        if access_token:
-            self.req.credential.set_token(access_token)
-        if user_id:
-            self.req.credential.set_user_id(user_id)
-        if not self.check_credentials():
-            return {"error": "Not credentials valid"}
-
-        projects = self.req.get('/Network/{}/Groups/{}/Projects/mine'
-                                .format(hub_name, group_name))
-        return projects
-
-    def get_my_roles_in_group(self, hub_name, group_name,
-                              access_token=None,
-                              user_id=None):
-        """
-        Get my roles within a group in a hub
-        by using the hub's and group's name
+        Add an user to a project in a group within a hub
         """
         if access_token:
             self.req.credential.set_token(access_token)
@@ -2000,31 +1981,20 @@ class IBMQuantumExperience(object):
         if not self.check_credentials():
             return {"error": "Not credentials valid"}
 
-        roles = self.req.get('/Network/{}/Groups/{}/roles'
-                             .format(hub_name, group_name))
-        return roles
+        data = {
+            'email': email
+        }
 
-    def get_my_groups_in_hub(self, hub_name,
-                             access_token=None,
-                             user_id=None):
-        """
-        Get my groups within a hub
-        by using the hub's name
-        """
-        if access_token:
-            self.req.credential.set_token(access_token)
-        if user_id:
-            self.req.credential.set_user_id(user_id)
-        if not self.check_credentials():
-            return {"error": "Not credentials valid"}
+        user = self.req.post('/Network/{}/Groups/{}/Projects/{}/users'
+                             .format(hub, group, project),
+                             data=json.dumps(data))
+        return user
 
-        groups = self.req.get('/Network/{}/Groups/mine'
-                              .format(hub_name))
-        return groups
-
-    def get_my_hubs(self, access_token=None, user_id=None):
+    def remove_user_from_project_in_group_in_hub(self, hub, group, project,
+                                                 email, access_token=None,
+                                                 user_id=None):
         """
-        Get all my hubs
+        Remove an user from a group within a hub
         """
         if access_token:
             self.req.credential.set_token(access_token)
@@ -2033,8 +2003,85 @@ class IBMQuantumExperience(object):
         if not self.check_credentials():
             return {"error": "Not credentials valid"}
 
-        hubs = self.req.get('/Network/mine')
-        return hubs
+        user = self.req.delete('/Network/{}/Groups/{}/Projects/{}/users?email={}'
+                               .format(hub, group, project, email))
+        return user
+
+    def add_user_to_group_in_hub(self, hub, group,
+                                 email, access_token=None,
+                                 user_id=None):
+        """
+        Add an user to a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {
+            'email': email
+        }
+
+        user = self.req.post('/Network/{}/Groups/{}/users'
+                             .format(hub, group),
+                             data=json.dumps(data))
+        return user
+
+    def remove_user_from_group_in_hub(self, hub, group,
+                                      email, access_token=None,
+                                      user_id=None):
+        """
+        Remove an user from a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        user = self.req.delete('/Network/{}/Groups/{}/users?email={}'
+                               .format(hub, group, email))
+        return user
+
+    def add_user_to_hub(self, hub, email,
+                        access_token=None, user_id=None):
+        """
+        Add an user to a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {
+            'email': email
+        }
+
+        user = self.req.post('/Network/{}/users'
+                             .format(hub),
+                             data=json.dumps(data))
+        return user
+
+    def remove_user_from_hub(self, hub, email,
+                             access_token=None, user_id=None):
+        """
+        Remove an user from a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        user = self.req.delete('/Network/{}/users?email={}'
+                               .format(hub, email))
+        return user
 
 
 class ApiError(Exception):
