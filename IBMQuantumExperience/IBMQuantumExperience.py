@@ -1614,10 +1614,10 @@ class IBMQuantumExperience(object):
         devices = self.req.get('/Network/{}/devices'.format(hub))
         return devices
 
-    def create_device_in_hub(self, hub, device, priority,
-                             access_token=None, user_id=None):
+    def add_device_to_hub(self, hub, device, priority,
+                          access_token=None, user_id=None):
         """
-        Create a device within a hub
+        Add a device to a hub
         """
         if access_token:
             self.req.credential.set_token(access_token)
@@ -1737,6 +1737,43 @@ class IBMQuantumExperience(object):
             return {"error": "Not credentials valid"}
 
         device = self.req.delete('/Network/{}/Groups/{}'.format(hub, group))
+        return device
+
+    def add_device_to_group_in_hub(self, hub, group, device, priority,
+                                   access_token=None, user_id=None):
+        """
+        Add a device to a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {
+            'name': device,
+            'priority': priority
+        }
+
+        device = self.req.post('/Network/{}/Groups/{}/devices'.format(hub, group),
+                               data=json.dumps(data))
+        return device
+
+    def remove_device_from_group_in_hub(self, hub, group, device,
+                                        access_token=None, user_id=None):
+        """
+        Remove a device from a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        device = self.req.delete('/Network/{}/Groups/{}/devices/{}'
+                                 .format(hub, group, device))
         return device
 
     def get_projects_in_group_in_hub(self, hub_name, group_name,
