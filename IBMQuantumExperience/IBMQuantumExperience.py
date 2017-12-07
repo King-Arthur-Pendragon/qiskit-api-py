@@ -1617,7 +1617,7 @@ class IBMQuantumExperience(object):
     def remove_device_from_hub(self, hub, device,
                                access_token=None, user_id=None):
         """
-        Create a device within a hub
+        Remove a device from a hub
         """
         if access_token:
             self.req.credential.set_token(access_token)
@@ -1644,6 +1644,28 @@ class IBMQuantumExperience(object):
         groups = self.req.get('/Network/{}/Groups'.format(name))
         return groups
 
+    def create_group_in_hub(self, hub, group, title, description,
+                            access_token=None, user_id=None):
+        """
+        Create a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {
+            'name': group,
+            'title': title,
+            'description': description
+        }
+
+        group = self.req.post('/Network/{}/Groups'.format(hub),
+                              data=json.dumps(data))
+        return group
+
     def get_group_in_hub_by_name(self, hub_name, group_name,
                                  access_token=None, user_id=None):
         """
@@ -1659,6 +1681,42 @@ class IBMQuantumExperience(object):
 
         group = self.req.get('/Network/{}/Groups/{}'.format(hub_name, group_name))
         return group
+
+    def edit_group_in_hub(self, hub, group, title, description,
+                          access_token=None, user_id=None):
+        """
+        Create a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {
+            'title': title,
+            'description': description
+        }
+
+        group = self.req.put('/Network/{}/Groups/{}'.format(hub, group),
+                             data=json.dumps(data))
+        return group
+
+    def remove_group_from_hub(self, hub, group,
+                              access_token=None, user_id=None):
+        """
+        Remove a group from a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        device = self.req.delete('/Network/{}/Groups/{}'.format(hub, group))
+        return device
 
     def get_projects_in_group_in_hub(self, hub_name, group_name,
                                      access_token=None, user_id=None):
