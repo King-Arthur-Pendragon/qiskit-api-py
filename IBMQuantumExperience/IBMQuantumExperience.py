@@ -1776,7 +1776,7 @@ class IBMQuantumExperience(object):
                                  .format(hub, group, device))
         return device
 
-    def get_projects_in_group_in_hub(self, hub_name, group_name,
+    def get_projects_in_group_in_hub(self, hub, group,
                                      access_token=None, user_id=None):
         """
         Get all projects within a specific group in a hub
@@ -1790,11 +1790,35 @@ class IBMQuantumExperience(object):
             return {"error": "Not credentials valid"}
 
         projects = self.req.get('/Network/{}/Groups/{}/Projects'
-                                .format(hub_name, group_name))
+                                .format(hub, group))
         return projects
 
-    def get_project_in_group_in_hub_by_name(self, hub_name, group_name,
-                                            project_name, access_token=None,
+    def create_project_in_group_in_hub(self, hub, group, project, title,
+                                       description, access_token=None,
+                                       user_id=None):
+        """
+        Create a project in a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {
+            'name': project,
+            'title': title,
+            'description': description
+        }
+
+        project = self.req.post('/Network/{}/Groups/{}/Projects'
+                                .format(hub, group),
+                                data=json.dumps(data))
+        return project
+
+    def get_project_in_group_in_hub_by_name(self, hub, group,
+                                            project, access_token=None,
                                             user_id=None):
         """
         Get a specific project within a group in a hub
@@ -1808,7 +1832,23 @@ class IBMQuantumExperience(object):
             return {"error": "Not credentials valid"}
 
         project = self.req.get('/Network/{}/Groups/{}/Projects/{}'
-                               .format(hub_name, group_name, project_name))
+                               .format(hub, group, project))
+        return project
+
+    def remove_project_from_group_in_hub(self, hub, group, project,
+                                         access_token=None, user_id=None):
+        """
+        Remove a device from a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        project = self.req.delete('/Network/{}/Groups/{}/Projects/{}'
+                                  .format(hub, group, project))
         return project
 
     def get_my_projects_in_group_in_hub(self, hub_name, group_name,
