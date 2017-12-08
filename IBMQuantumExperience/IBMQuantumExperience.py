@@ -1082,7 +1082,8 @@ class IBMQuantumExperience(object):
             return {"error": "Not credentials valid"}
 
         id_user_group = self._get_user_group_id_from_name(name_user_group,
-                                                          access_token=access_token, user_id=user_id)  # noqa
+                                                          access_token=access_token,
+                                                          user_id=user_id)  # noqa
 
         id_user = self._get_user_id_from_email(email)
 
@@ -1999,8 +2000,8 @@ class IBMQuantumExperience(object):
                                .format(hub, group, project, email))
         return user
 
-    def add_user_to_group_in_hub(self, hub, group,
-                                 email, access_token=None,
+    def add_user_to_group_in_hub(self, hub, group, email,
+                                 role, access_token=None,
                                  user_id=None):
         """
         Add an user to a group within a hub
@@ -2013,7 +2014,8 @@ class IBMQuantumExperience(object):
             return {"error": "Not credentials valid"}
 
         data = {
-            'email': email
+            'email': email,
+            'role': role
         }
 
         user = self.req.post('/Network/{}/Groups/{}/users'
@@ -2038,7 +2040,22 @@ class IBMQuantumExperience(object):
                                .format(hub, group, email))
         return user
 
-    def add_user_to_hub(self, hub, email,
+    def get_users_from_hub(self, hub, access_token=None, user_id=None):
+        """
+        Add an user to a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        user = self.req.get('/Network/{}/users'
+                            .format(hub))
+        return user
+
+    def add_user_to_hub(self, hub, email, role,
                         access_token=None, user_id=None):
         """
         Add an user to a hub
@@ -2051,7 +2068,8 @@ class IBMQuantumExperience(object):
             return {"error": "Not credentials valid"}
 
         data = {
-            'email': email
+            'email': email,
+            'role': role
         }
 
         user = self.req.post('/Network/{}/users'
