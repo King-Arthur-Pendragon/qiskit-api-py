@@ -778,7 +778,6 @@ api.remove_device_from_project_in_group_in_hub(hub, group, project, device)
 - **device**: The name of the device to be removed
 
 
-
 #### Get a hubs by name @ IBM Q
 To get a hubs by name
 
