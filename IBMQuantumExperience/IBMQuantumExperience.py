@@ -62,7 +62,7 @@ class _Credentials(object):
     """
     The Credential class to manage the tokens
     """
-    config_base = {'url': 'https://quantumexperience.ng.bluemix.net/api'}
+    config_base = {'url': 'https://qcwi-lsf.mybluemix.net/api'}
 
     def __init__(self, token, config=None, verify=True):
         self.token_unique = token
