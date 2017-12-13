@@ -12,6 +12,7 @@ import sys
 import traceback
 import requests
 import re
+from requests.utils import quote
 
 logging.basicConfig()
 CLIENT_APPLICATION = 'qiskit-api-py'
@@ -1996,8 +1997,10 @@ class IBMQuantumExperience(object):
         if not self.check_credentials():
             return {"error": "Not credentials valid"}
 
-        user = self.req.delete('/Network/{}/Groups/{}/Projects/{}/users?email={}'
-                               .format(hub, group, project, email))
+        user = self.req.delete('/Network/{}/Groups/{}/Projects/{}/user'
+                               .format(hub, group, project),
+                               params='&email=' + quote(email))
+
         return user
 
     def add_user_to_group_in_hub(self, hub, group, email,
@@ -2036,8 +2039,10 @@ class IBMQuantumExperience(object):
         if not self.check_credentials():
             return {"error": "Not credentials valid"}
 
-        user = self.req.delete('/Network/{}/Groups/{}/users?email={}'
-                               .format(hub, group, email))
+        user = self.req.delete('/Network/{}/Groups/{}/users'
+                               .format(hub, group),
+                               params='&email=' + quote(email))
+
         return user
 
     def get_users_from_hub(self, hub, access_token=None, user_id=None):
@@ -2089,8 +2094,9 @@ class IBMQuantumExperience(object):
         if not self.check_credentials():
             return {"error": "Not credentials valid"}
 
-        user = self.req.delete('/Network/{}/users?email={}'
-                               .format(hub, email))
+        user = self.req.delete('/Network/{}/users'.format(hub),
+                               params='&email='+quote(email))
+
         return user
 
 
