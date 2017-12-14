@@ -1979,7 +1979,7 @@ class IBMQuantumExperience(object):
             'email': email
         }
 
-        user = self.req.post('/Network/{}/Groups/{}/Projects/{}/users'
+        user = self.req.post('/Network/{}/Groups/{}/Projects/{}/user'
                              .format(hub, group, project),
                              data=json.dumps(data))
         return user
