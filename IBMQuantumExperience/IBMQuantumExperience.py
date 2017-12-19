@@ -12,9 +12,51 @@ import sys
 import traceback
 import requests
 import re
+from HTTPProxyDigestAuth import HTTPProxyDigestAuth
 
 logging.basicConfig()
 CLIENT_APPLICATION = 'qiskit-api-py'
+
+
+def get_job_url(config, hub, group, project):
+    """
+    Util method to get job url
+    """
+    if ((config is not None) and ('hub' in config) and (hub is None)):
+        hub = config["hub"]
+    if ((config is not None) and ('group' in config) and (group is None)):
+        group = config["group"]
+    if ((config is not None) and ('project' in config) and (project is None)):
+        project = config["project"]
+    if ((hub is not None) and (group is not None) and (project is not None)):
+        return '/Network/{}/Groups/{}/Projects/{}/jobs'.format(hub, group, project)
+    return '/Jobs'
+
+
+def get_backend_stats_url(config, hub, backend_type):
+    """
+    Util method to get backend stats url
+    """
+    if ((config is not None) and ('hub' in config) and (hub is None)):
+        hub = config["hub"]
+    if (hub is not None):
+        return '/Network/{}/devices/{}'.format(hub, backend_type)
+    return '/Backends/{}'.format(backend_type)
+
+
+def get_backend_url(config, hub, group, project):
+    """
+    Util method to get backend url
+    """
+    if ((config is not None) and ('hub' in config) and (hub is None)):
+        hub = config["hub"]
+    if ((config is not None) and ('group' in config) and (group is None)):
+        group = config["group"]
+    if ((config is not None) and ('project' in config) and (project is None)):
+        project = config["project"]
+    if ((hub is not None) and (group is not None) and (project is not None)):
+        return '/Network/{}/Groups/{}/Projects/{}/devices'.format(hub, group, project)
+    return '/Backends'
 
 
 class _Credentials(object):
@@ -23,10 +65,12 @@ class _Credentials(object):
     """
     config_base = {'url': 'https://quantumexperience.ng.bluemix.net/api'}
 
-    def __init__(self, token, config=None, verify=True):
+    def __init__(self, token, config=None, verify=True, proxies=None, auth=None):
         self.token_unique = token
         self.verify = verify
         self.config = config
+        self.proxies = proxies
+        self.auth = auth
         if not verify:
             import requests.packages.urllib3 as urllib3
             urllib3.disable_warnings()
@@ -61,12 +105,16 @@ class _Credentials(object):
             client_application += ':' + self.config["client_application"]
         headers = {'x-qx-client-application': client_application}
         if self.token_unique:
-            self.data_credentials = requests.post(str(self.config.get('url') +
-                                                  "/users/loginWithToken"),
-                                                  data={'apiToken':
-                                                        self.token_unique},
-                                                  verify=self.verify,
-                                                  headers=headers).json()
+            try:
+                response = requests.post(str(self.config.get('url') +
+                                             "/users/loginWithToken"),
+                                         data={'apiToken': self.token_unique},
+                                         verify=self.verify,
+                                         headers=headers,
+                                         proxies=self.proxies,
+                                         auth=self.auth)
+            except requests.RequestException as e:
+                raise ApiError('error during login: %s' % str(e))
         elif config and ("email" in config) and ("password" in config):
             email = config.get('email', None)
             password = config.get('password', None)
@@ -74,13 +122,33 @@ class _Credentials(object):
                 'email': email,
                 'password': password
             }
-            self.data_credentials = requests.post(str(self.config.get('url') +
-                                                  "/users/login"),
-                                                  data=credentials,
-                                                  verify=self.verify,
-                                                  headers=headers).json()
+            try:
+                response = requests.post(str(self.config.get('url') +
+                                             "/users/login"),
+                                         data=credentials,
+                                         verify=self.verify,
+                                         headers=headers,
+                                         proxies=self.proxies,
+                                         auth=self.auth)
+            except requests.RequestException as e:
+                raise ApiError('error during login: %s' % str(e))
         else:
             raise CredentialsError('invalid token')
+
+        # 401 is used for
+        if response.status_code == 401:
+            try:
+                # For 401: ACCEPT_LICENSE_REQUIRED, a detailed message is
+                # present.
+                error_message = response.json()['error']['message']
+                raise CredentialsError('error durin login: %s' % error_message)
+            except:
+                raise CredentialsError('invalid token')
+        try:
+            response.raise_for_status()
+            self.data_credentials = response.json()
+        except (requests.HTTPError, json.decoder.JSONDecodeError) as e:
+            raise ApiError('error during login: %s' % str(e))
 
         if self.get_token() is None:
             raise CredentialsError('invalid token')
@@ -125,9 +193,15 @@ class _Request(object):
         self.verify = verify
         self.client_application = CLIENT_APPLICATION
         self.config = config
+        if (('proxies' in config) and ('urls' in config['proxies']) and
+           ('username' in config['proxies']) and
+           ('password' in config['proxies'])):
+            self.proxies = self.config['proxies']['urls']
+            self.auth = HTTPProxyDigestAuth(config['proxies']['username'],
+                                            config['proxies']['password'])
         if self.config and ("client_application" in self.config):
             self.client_application += ':' + self.config["client_application"]
-        self.credential = _Credentials(token, self.config, verify)
+        self.credential = _Credentials(token, self.config, verify, self.proxies, self.auth)
         self.log = logging.getLogger(__name__)
         if not isinstance(retries, int):
             raise TypeError('post retries must be positive integer')
@@ -160,19 +234,25 @@ class _Request(object):
         retries = self.retries
         while retries > 0:
             respond = requests.post(url, data=data, headers=headers,
-                                    verify=self.verify)
+                                    verify=self.verify, proxies=self.proxies,
+                                    auth=self.auth)
             if not self.check_token(respond):
                 respond = requests.post(url, data=data, headers=headers,
-                                        verify=self.verify)
+                                        verify=self.verify,
+                                        proxies=self.proxies,
+                                        auth=self.auth)
 
             if self._response_good(respond):
                 if self.result:
                     return self.result
-                else:
+                elif retries < 2:
                     return respond.json()
+                else:
+                    retries -= 1
             else:
                 retries -= 1
                 time.sleep(self.timeout_interval)
+
         # timed out
         raise ApiError(usr_msg='Failed to get proper ' +
                        'response from backend.')
@@ -190,15 +270,20 @@ class _Request(object):
         retries = self.retries
         while retries > 0:
             respond = requests.put(url, data=data, headers=headers,
-                                    verify=self.verify)
+                                   verify=self.verify, proxies=self.proxies,
+                                   auth=self.auth)
             if not self.check_token(respond):
                 respond = requests.put(url, data=data, headers=headers,
-                                        verify=self.verify)
+                                       verify=self.verify,
+                                       proxies=self.proxies,
+                                       auth=self.auth)
             if self._response_good(respond):
                 if self.result:
                     return self.result
-                else:
+                elif retries < 2:
                     return respond.json()
+                else:
+                    retries -= 1
             else:
                 retries -= 1
                 time.sleep(self.timeout_interval)
@@ -220,15 +305,19 @@ class _Request(object):
         retries = self.retries
         headers = {'x-qx-client-application': self.client_application}
         while retries > 0:  # Repeat until no error
-            respond = requests.get(url, verify=self.verify, headers=headers)
+            respond = requests.get(url, verify=self.verify, headers=headers,
+                                   proxies=self.proxies, auth=self.auth)
             if not self.check_token(respond):
                 respond = requests.get(url, verify=self.verify,
-                                       headers=headers)
+                                       headers=headers, proxies=self.proxies,
+                                       auth=self.auth)
             if self._response_good(respond):
                 if self.result:
                     return self.result
-                else:
+                elif retries < 2:
                     return respond.json()
+                else:
+                    retries -= 1
             else:
                 retries -= 1
                 time.sleep(self.timeout_interval)
@@ -248,10 +337,13 @@ class _Request(object):
         retries = self.retries
         while retries > 0:
             respond = requests.delete(url, headers=headers,
-                                    verify=self.verify)
+                                      verify=self.verify, proxies=self.proxies,
+                                      auth=self.auth)
             if not self.check_token(respond):
                 respond = requests.delete(url, headers=headers,
-                                        verify=self.verify)
+                                          verify=self.verify,
+                                          proxies=self.proxies,
+                                          auth=self.auth)
             if self._response_good(respond):
                 if self.result:
                     return self.result
@@ -284,11 +376,12 @@ class _Request(object):
                 respond.text))
             return self._parse_response(respond)
         try:
-            if respond.status_code == 204:  # not content as response but ok
-                self.result = {"status": "ok"}
+            if (str(respond.headers['content-type']).startswith("text/html;")):
+                self.result = respond.text
+                return True
             else:
                 self.result = respond.json()
-        except:
+        except (json.JSONDecodeError, ValueError):
             usr_msg = 'device server returned unexpected http response'
             dev_msg = usr_msg + ': ' + respond.text
             raise ApiError(usr_msg=usr_msg, dev_msg=dev_msg)
@@ -343,6 +436,7 @@ class IBMQuantumExperience(object):
 
     def __init__(self, token=None, config=None, verify=True):
         """ If verify is set to false, ignore SSL certificate errors """
+        self.config = config
         self.req = _Request(token, config=config, verify=verify)
 
     def _check_backend(self, backend, endpoint):
@@ -569,7 +663,7 @@ class IBMQuantumExperience(object):
             return respond
 
     def run_job(self, qasms, backend='simulator', shots=1,
-                max_credits=3, seed=None, hub=None, group=None,
+                max_credits=None, seed=None, hub=None, group=None,
                 project=None, access_token=None, user_id=None):
         """
         Execute a job
@@ -585,8 +679,9 @@ class IBMQuantumExperience(object):
             qasm['qasm'] = qasm['qasm'].replace('OPENQASM 2.0;', '')
         data = {'qasms': qasms,
                 'shots': shots,
-                'maxCredits': max_credits,
                 'backend': {}}
+        if max_credits:
+            data['maxCredits'] = max_credits
 
         backend_type = self._check_backend(backend, 'job')
 
@@ -600,13 +695,9 @@ class IBMQuantumExperience(object):
 
         data['backend']['name'] = backend_type
 
-        if ((hub is not None) and (group is not None)
-                and (project is not None)):
-            job = self.req.post('/Network/{}/Groups/{}/Projects/{}/jobs'
-                                .format(hub, group, project),
-                                data=json.dumps(data))
-        else:
-            job = self.req.post('/Jobs', data=json.dumps(data))
+        url = get_job_url(self.config, hub, group, project)
+
+        job = self.req.post(url, data=json.dumps(data))
 
         return job
 
@@ -630,12 +721,11 @@ class IBMQuantumExperience(object):
             respond["error"] = "Job ID not specified"
             return respond
 
-        if ((hub is not None) and (group is not None) and
-                (project is not None)):
-            job = self.req.get('/Network/{}/Groups/{}/Projects/{}/jobs/{}'
-                               .format(hub, group, project, id_job))
-        else:
-            job = self.req.get('/Jobs/' + id_job)
+        url = get_job_url(self.config, hub, group, project)
+
+        url += '/' + id_job
+
+        job = self.req.get(url)
 
         # To remove result object and add the attributes to data object
         if 'qasms' in job:
@@ -689,7 +779,7 @@ class IBMQuantumExperience(object):
 
         return ret
 
-    def backend_calibration(self, backend='ibmqx4', access_token=None, user_id=None):
+    def backend_calibration(self, backend='ibmqx4', hub=None, access_token=None, user_id=None):
         """
         Get the calibration of a real chip
         """
@@ -711,11 +801,13 @@ class IBMQuantumExperience(object):
             ret["calibrations"] = None
             return ret
 
-        ret = self.req.get('/Backends/' + backend_type + '/calibration')
+        url = get_backend_stats_url(self.config, hub, backend_type)
+
+        ret = self.req.get(url + '/calibration')
         ret["backend"] = backend_type
         return ret
 
-    def backend_parameters(self, backend='ibmqx4', access_token=None, user_id=None):
+    def backend_parameters(self, backend='ibmqx4', hub=None, access_token=None, user_id=None):
         """
         Get the parameters of calibration of a real chip
         """
@@ -737,11 +829,13 @@ class IBMQuantumExperience(object):
             ret["parameters"] = None
             return ret
 
-        ret = self.req.get('/Backends/' + backend_type + '/parameters')
+        url = get_backend_stats_url(self.config, hub, backend_type)
+
+        ret = self.req.get(url + '/parameters')
         ret["backend"] = backend_type
         return ret
 
-    def available_backends(self, access_token=None, user_id=None):
+    def available_backends(self, hub=None, group=None, project=None, access_token=None, user_id=None):
         """
         Get the backends available to use in the QX Platform
         """
@@ -752,7 +846,13 @@ class IBMQuantumExperience(object):
         if not self.check_credentials():
             raise CredentialsError('credentials invalid')
         else:
-            return [backend for backend in self.req.get('/Backends')
+
+            url = get_backend_url(self.config, hub, group, project)
+
+            ret = self.req.get(url)
+            if (ret is not None) and (isinstance(ret, dict)):
+                return []
+            return [backend for backend in ret
                     if backend.get('status') == 'on']
 
     def available_backend_simulators(self, access_token=None, user_id=None):
@@ -766,13 +866,16 @@ class IBMQuantumExperience(object):
         if not self.check_credentials():
             raise CredentialsError('credentials invalid')
         else:
-            return [backend for backend in self.req.get('/Backends')
+            ret = self.req.get('/Backends')
+            if (ret is not None) and (isinstance(ret, dict)):
+                return []
+            return [backend for backend in ret
                     if backend.get('status') == 'on' and
                     backend.get('simulator') is True]
 
     def get_my_credits(self, raw=None, access_token=None, user_id=None):
         """
-        Get the the credits by user to use in the QX Platform
+        Get the credits by user to use in the QX Platform
         """
         if access_token:
             self.req.credential.set_token(access_token)
@@ -1501,6 +1604,12 @@ class IBMQuantumExperience(object):
 
         backend = self.req.put('/Devices/' + data["id"], data=json.dumps(data))
         return backend
+
+    def api_version(self):
+        """
+        Get the API Version of the QX Platform
+        """
+        return self.req.get('/version')
 
 
 class ApiError(Exception):
