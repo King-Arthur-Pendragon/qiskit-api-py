@@ -13,6 +13,7 @@ import traceback
 import requests
 import re
 from requests.utils import quote
+# from .HTTPProxyDigestAuth import HTTPProxyDigestAuth
 
 logging.basicConfig()
 CLIENT_APPLICATION = 'qiskit-api-py'
@@ -65,10 +66,11 @@ class _Credentials(object):
     """
     config_base = {'url': 'https://qcwi-lsf.mybluemix.net/api'}
 
-    def __init__(self, token, config=None, verify=True):
+    def __init__(self, token, config=None, verify=True, proxies=None):
         self.token_unique = token
         self.verify = verify
         self.config = config
+        self.proxies = proxies
         if not verify:
             import requests.packages.urllib3 as urllib3
             urllib3.disable_warnings()
@@ -105,10 +107,10 @@ class _Credentials(object):
             try:
                 response = requests.post(str(self.config.get('url') +
                                              "/users/loginWithToken"),
-                                         data={'apiToken':
-                                         self.token_unique},
+                                         data={'apiToken': self.token_unique},
                                          verify=self.verify,
-                                         headers=headers)
+                                         headers=headers,
+                                         proxies=self.proxies)
             except requests.RequestException as e:
                 raise ApiError('error during login: %s' % str(e))
         elif config and ("email" in config) and ("password" in config):
@@ -123,7 +125,8 @@ class _Credentials(object):
                                              "/users/login"),
                                          data=credentials,
                                          verify=self.verify,
-                                         headers=headers)
+                                         headers=headers,
+                                         proxies=self.proxies)
             except requests.RequestException as e:
                 raise ApiError('error during login: %s' % str(e))
         else:
@@ -187,9 +190,14 @@ class _Request(object):
         self.verify = verify
         self.client_application = CLIENT_APPLICATION
         self.config = config
+        self.proxies = None
+        if ((config is not None) and ('proxies' in config) and
+           ('urls' in config['proxies'])):
+            self.proxies = self.config['proxies']['urls']
         if self.config and ("client_application" in self.config):
             self.client_application += ':' + self.config["client_application"]
-        self.credential = _Credentials(token, self.config, verify)
+        self.credential = _Credentials(token, self.config, verify,
+                                       proxies=self.proxies)
         self.log = logging.getLogger(__name__)
         if not isinstance(retries, int):
             raise TypeError('post retries must be positive integer')
@@ -222,10 +230,11 @@ class _Request(object):
         retries = self.retries
         while retries > 0:
             respond = requests.post(url, data=data, headers=headers,
-                                    verify=self.verify)
+                                    verify=self.verify, proxies=self.proxies)
             if not self.check_token(respond):
                 respond = requests.post(url, data=data, headers=headers,
-                                        verify=self.verify)
+                                        verify=self.verify,
+                                        proxies=self.proxies)
 
             if self._response_good(respond):
                 if self.result:
@@ -255,10 +264,11 @@ class _Request(object):
         retries = self.retries
         while retries > 0:
             respond = requests.put(url, data=data, headers=headers,
-                                   verify=self.verify)
+                                   verify=self.verify, proxies=self.proxies)
             if not self.check_token(respond):
                 respond = requests.put(url, data=data, headers=headers,
-                                       verify=self.verify)
+                                       verify=self.verify,
+                                       proxies=self.proxies)
             if self._response_good(respond):
                 if self.result:
                     return self.result
@@ -287,10 +297,11 @@ class _Request(object):
         retries = self.retries
         headers = {'x-qx-client-application': self.client_application}
         while retries > 0:  # Repeat until no error
-            respond = requests.get(url, verify=self.verify, headers=headers)
+            respond = requests.get(url, verify=self.verify, headers=headers,
+                                   proxies=self.proxies)
             if not self.check_token(respond):
                 respond = requests.get(url, verify=self.verify,
-                                       headers=headers)
+                                       headers=headers, proxies=self.proxies)
             if self._response_good(respond):
                 if self.result:
                     return self.result
@@ -317,10 +328,13 @@ class _Request(object):
         retries = self.retries
         while retries > 0:
             respond = requests.delete(url, headers=headers,
-                                      verify=self.verify)
+                                      verify=self.verify, proxies=self.proxies,
+                                      auth=self.auth)
             if not self.check_token(respond):
                 respond = requests.delete(url, headers=headers,
-                                          verify=self.verify)
+                                          verify=self.verify,
+                                          proxies=self.proxies,
+                                          auth=self.auth)
             if self._response_good(respond):
                 if self.result:
                     return self.result
@@ -632,7 +646,7 @@ class IBMQuantumExperience(object):
             return respond
 
     def run_job(self, qasms, backend='simulator', shots=1,
-                max_credits=3, seed=None, hub=None, group=None,
+                max_credits=None, seed=None, hub=None, group=None,
                 project=None, access_token=None, user_id=None):
         """
         Execute a job
@@ -648,8 +662,9 @@ class IBMQuantumExperience(object):
             qasm['qasm'] = qasm['qasm'].replace('OPENQASM 2.0;', '')
         data = {'qasms': qasms,
                 'shots': shots,
-                'maxCredits': max_credits,
                 'backend': {}}
+        if max_credits:
+            data['maxCredits'] = max_credits
 
         backend_type = self._check_backend(backend, 'job')
 
@@ -768,7 +783,9 @@ class IBMQuantumExperience(object):
             ret["backend"] = backend_type
             ret["calibrations"] = None
             return ret
+
         url = get_backend_stats_url(self.config, hub, backend_type)
+        
         ret = self.req.get(url + '/calibration')
         ret["backend"] = backend_type
         return ret

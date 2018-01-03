@@ -787,7 +787,6 @@ api.get_hub_by_name(name)
 - **name**: Name of the backend to be edited
 
 
-
 ## Deploy and Test
 
 If you want participate in the project, you can clone the repository and install the dependencies to run it.
