@@ -415,7 +415,7 @@ api.get_backend_by_name(name)
 - **name**: The name of the backend to get
 
 
-#### Get all backend available @ IBM Q
+#### Get all backends available @ IBM Q
 To get all backends
 
 ```python
@@ -469,34 +469,33 @@ api.get_hubs()
 ```
 
 
-#### Get a hubs by name @ IBM Q
-To get a hubs by name
+#### Get a hub by name @ IBM Q
+To get a hub by name
 
 ```python
-api.get_hub_by_name(name)
+api.get_hub(hub)
 ```
-- **name**: The name of the hub to get
+- **hub**: The name of the hub to get
 
 
 #### Create a hub @ IBM Q
 To create a hub in the system
 
 ```python
-api.create_hub(name, title, description)
+api.create_hub(hub, title, description)
 ```
-- **name**: The name of the hub to be created
+- **hub**: The name of the hub to be created
 - **title**: The title of the hub to be created
 - **description**: The description of the hub to be created
 
 
 #### Edit a hub @ IBM Q
-To edit a hub in the system
+To edit a hub by name
 
 ```python
-api.edit_hub(name, title, description)
+api.edit_hub(hub, title, description)
 ```
-  Arguments:
-- **name**: The name of the hub to be edited
+- **hub**: The name of the hub to be edited
 - **title**: The new title for the hub
 - **description**: The new description for the hub
 
@@ -505,35 +504,35 @@ api.edit_hub(name, title, description)
 To remove a hub by name
 
 ```python
-api.remove_hub_by_name(name)
+api.remove_hub(hub)
 ```
-- **name**: The name of the hub to be removed
+- **hub**: The name of the hub to be removed
 
 
 #### Get all groups in a hub @ IBM Q
 To get all groups in a hub by using hub's name
 
 ```python
-api.get_groups_in_hub(name)
+api.get_groups(hub)
 ```
-- **name**: The name of the hub to be used
+- **hub**: The name of the hub to be used
 
 
 #### Get a group within a hub @ IBM Q
 To get a group within a hub by using hub's and group's name
 
 ```python
-api.get_group_in_hub_by_name(hub_name, group_name)
+api.get_group(hub, group)
 ```
-- **hub_name**: The name of the hub to be used
-- **group_name**: The name of the group to get within the hub
+- **hub**: The name of the hub to be used
+- **group**: The name of the group to get within the hub
 
 
 #### Create a group within a hub @ IBM Q
 To create a group within a hub
 
 ```python
-api.create_group_in_hub(hub, group, title, description)
+api.create_group(hub, group, title, description)
 ```
 - **hub**: The name of the hub where the group will be created
 - **group**: The name of the group to be created
@@ -545,7 +544,7 @@ api.create_group_in_hub(hub, group, title, description)
 To edit a group within a hub
 
 ```python
-api.edit_group_in_hub(hub, group, title, description)
+api.edit_group(hub, group, title, description)
 ```
 - **hub**: The name of the hub where the group will be edited
 - **group**: The name of the group to be edited
@@ -557,7 +556,7 @@ api.edit_group_in_hub(hub, group, title, description)
 To remove a group from hub by name
 
 ```python
-api.remove_group_from_hub(hub, group)
+api.remove_group(hub, group)
 ```
 - **hub**:  The name of the hub where the device will be removed
 - **group**: The name of the group to be removed
@@ -567,9 +566,8 @@ api.remove_group_from_hub(hub, group)
 To get all projects in a group within a hub
 
 ```python
-api.get_projects_in_group_in_hub(hub, group)
+api.get_projects(hub, group)
 ```
-  Arguments:
 - **hub**: The name of the hub to be used
 - **group**: The name of the group to be used
 
@@ -578,9 +576,8 @@ api.get_projects_in_group_in_hub(hub, group)
 To get a project by name in a group within a hub
 
 ```python
-api.get_project_in_group_in_hub_by_name(hub, group, project)
+api.get_project(hub, group, project)
 ```
-* ```getprojectingroupinhub``` -> 
 - **hub**: The name of the hub to be used
 - **group**: The name of the group to be used
 - **project**: The name of the project to get
@@ -590,7 +587,7 @@ api.get_project_in_group_in_hub_by_name(hub, group, project)
 To create a project related to group within a hub
 
 ```python
-api.create_project_in_group_in_hub(hub, group, project, title, description)
+api.create_project(hub, group, project, title, description)
 ```
 - **hub**: The name of the hub that hosts the group
 - **group**: The name of the group where the project will be created
@@ -603,7 +600,7 @@ api.create_project_in_group_in_hub(hub, group, project, title, description)
 To edit a project related to group within a hub
 
 ```python
-api.edit_project_in_group_in_hub(hub, group, project, title, description)
+api.edit_project(hub, group, project, title, description)
 ```
 - **hub**: The name of the hub that hosts the group
 - **group**: The name of the group where the project will be edited
@@ -616,7 +613,7 @@ api.edit_project_in_group_in_hub(hub, group, project, title, description)
 To remove a project from a group within a hub
 
 ```python
-api.remove_project_from_group_in_hub(hub, group, project)
+api.remove_project(hub, group, project)
 ```
 - **hub**: The name of the hub where the group is registered
 - **group**: The name of the group where the project will be removed
@@ -627,164 +624,68 @@ api.remove_project_from_group_in_hub(hub, group, project)
 To get all users in a hub (and its groups/projects)
 
 ```python
-api.remove_project_from_group_in_hub(hub, group, project)
+api.get_users(hub)
 ```
 - **hub**: The name of the hub where the user is registered
 
 
-#### Add an user to a hub @ IBM Q
-To add an user to a hub
+#### Add an user to a hub, group or project @ IBM Q
+To add an user to a hub, group or project
 
 ```python
-api.add_user_to_hub(hub, email, role)
+api.add_user(email, hub, group, project, role)
 ```
 - **hub**: The name of the hub where the user will be registered
+- **group**: The name of the group where the user will be registered (optional)
+- **project**: The name of the project where the user will be registered (optional)
 - **email**: The email of the user to be added
-- **role**: The role that will have the user within the hub
+- **role**: The role that will have the user within the hub (only required in the case of a hub)
 
 
-#### Remove an user from a hub @ IBM Q
-To remove an user from a hub
+#### Remove an user from a hub, group or project @ IBM Q
+To remove an user from a hub, group or project
 
 ```python
-api.remove_user_from_hub(hub, email)
+api.remove_user(email, hub, group, project)
 ```
-- **hub**: The name of the hub where the user will be registered
 - **email**: The email of the user to be removed
-
-
-#### Add an user to a group @ IBM Q
-To add an user to a group within a hub
-
-```python
-api.add_user_to_group_in_hub(hub, group, email, role)
-``` 
-- **hub**: The name of the hub where the group is registered
-- **group**: The name of the group that will host the user
-- **email**: The email of the user to be added
-- **role**: The role that will have the user within the group
-
-
-#### Remove an user from a group @ IBM Q
-To remove an user from a group within a hub
-
-```python
-api.remove_user_from_group_in_hub(hub, group, email, role)
-``` 
-- **hub**: The name of the hub where the group is registered
-- **group**: The name of the group that hosts the user
-- **email**: The email of the user to be removed
-
-
-#### Add an user to a project @ IBM Q
-To add an user to a project in group within a hub
-
-```python
-api.add_user_to_project_in_group_in_hub(hub, group, project, email)
-``` 
-- **hub**: The name of the hub where the group is registered
-- **group**: The name of the group that hosts the project
-- **project**: The name of the project where the user will be added
-- **email**: The email of the user to be added
-
-
-#### Remove an user from a project @ IBM Q
-To remove an user from a project in a group within a hub
-
-```python
-api.remove_user_from_project_in_group_in_hub(hub, group, project, email)
-``` 
-- **hub**: The name of the hub where the group is registered
-- **group**: The name of the group that hosts the group
+- **hub**: The name of the hub where the user will be removed
+- **group**: The name of the project where the user will be removed
 - **project**: The name of the project where the user will be removed
-- **email**: The email of the user to be removed
 
 
 #### Get all devices in a hub @ IBM Q
 To get all devices in a hub (and its groups/projects)
 
 ```python
-api.get_devices_in_hub(hub)
+api.get_devices(hub)
 ``` 
 - **hub**: The name of the hub where the devices are registered
 
 
-#### Add a device to a hub @ IBM Q
-To add a device to a hub
+#### Add a device to a hub, group or project @ IBM Q
+To add a device to a hub, group or project
 
 ```python
-api.add_device_to_hub(hub, device, priority)
+api.add_device(device, priority, hub, group, project)
 ``` 
+- **device**: The name of the device to be added
+- **priority**: The priority of the device to be added
 - **hub**: The name of the hub where the device will be added
-- **device**: The name of the device to be added
-- **priority**: The priority of the device to be added
+- **group**: The name of the group where the device will be added (optional)
+- **project**: The name of the project where the device will be added (optional)
 
 
-#### Remove device from hub @ IBM Q
-To remove device from hub
+#### Remove device from a hub, group or project @ IBM Q
+To remove device from a hub, group or project
 
 ```python
-api.remove_device_from_hub(hub, device)
+api.remove_device(device, hub, group, project)
 ``` 
+- **device**: The name of the device to be removed
 - **hub**: The name of the hub where the device will be removed
-- **device**: The name of the device to be removed
-
-
-#### Add device to a group @ IBM Q
-To add device to a group within a hub
-
-```python
-api.add_device_to_group_in_hub(hub, group, device, priority)
-``` 
-- **hub**: The name of the hub where the group is registered
-- **group**: The name of the group where the device will be added
-- **device**: The name of the device to be added
-- **priority**: The priority of the device to be added
-
-
-#### Remove a device from a group @ IBM Q
-To remove a device from a group within a hub
-
-```python
-api.remove_device_from_group_in_hub(hub, group, device)
-``` 
-- **hub**: The name of the hub where the group is registered
-- **group**: The name of the group where the device will be removed
-- **device**: The name of the device to be removed
-
-
-#### Add device to a project @ IBM Q
-To add device to a project in group within a hub
-
-```python
-api.add_device_to_project_in_group_in_hub(hub, group, project, device, priority)
-``` 
-- **hub**: The name of the hub where the group is registered
-- **group**: The name of the group that hosts the project
-- **project**: The name of the project where the device will be added
-- **device**: The name of the device to be added
-- **priority**: The priority of the device to be added
-
-
-#### Remove a device from a project @ IBM Q
-To remove a device from a project in a group within a hub
-
-```python
-api.remove_device_from_project_in_group_in_hub(hub, group, project, device)
-``` 
-- **hub**: The name of the hub where the group is registered
-- **group**: The name of the group that hosts the group
-- **project**: The name of the project where the device will be removed
-- **device**: The name of the device to be removed
-
-
-#### Get a hubs by name @ IBM Q
-To get a hubs by name
-
-```python
-api.get_hub_by_name(name)
-```
-- **name**: Name of the backend to be edited
+- **group**: The name of the group where the device will be removed (optional)
+- **project**: The name of the project where the device will be removed (optional)
 
 
 ## Deploy and Test
