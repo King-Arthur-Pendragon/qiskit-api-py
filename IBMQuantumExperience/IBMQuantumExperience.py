@@ -23,13 +23,13 @@ def get_job_url(config, hub, group, project):
     """
     Util method to get job url
     """
-    if ((config is not None) and ('hub' in config) and (hub is None)):
+    if (config is not None) and ('hub' in config) and (hub is None):
         hub = config["hub"]
-    if ((config is not None) and ('group' in config) and (group is None)):
+    if (config is not None) and ('group' in config) and (group is None):
         group = config["group"]
-    if ((config is not None) and ('project' in config) and (project is None)):
+    if (config is not None) and ('project' in config) and (project is None):
         project = config["project"]
-    if ((hub is not None) and (group is not None) and (project is not None)):
+    if (hub is not None) and (group is not None) and (project is not None):
         return '/Network/{}/Groups/{}/Projects/{}/jobs'.format(hub, group, project)
     return '/Jobs'
 
@@ -38,9 +38,9 @@ def get_backend_stats_url(config, hub, backend_type):
     """
     Util method to get backend stats url
     """
-    if ((config is not None) and ('hub' in config) and (hub is None)):
+    if (config is not None) and ('hub' in config) and (hub is None):
         hub = config["hub"]
-    if (hub is not None):
+    if hub is not None:
         return '/Network/{}/devices/{}'.format(hub, backend_type)
     return '/Backends/{}'.format(backend_type)
 
@@ -49,13 +49,13 @@ def get_backend_url(config, hub, group, project):
     """
     Util method to get backend url
     """
-    if ((config is not None) and ('hub' in config) and (hub is None)):
+    if (config is not None) and ('hub' in config) and (hub is None):
         hub = config["hub"]
-    if ((config is not None) and ('group' in config) and (group is None)):
+    if (config is not None) and ('group' in config) and (group is None):
         group = config["group"]
-    if ((config is not None) and ('project' in config) and (project is None)):
+    if (config is not None) and ('project' in config) and (project is None):
         project = config["project"]
-    if ((hub is not None) and (group is not None) and (project is not None)):
+    if (hub is not None) and (group is not None) and (project is not None):
         return '/Network/{}/Groups/{}/Projects/{}/devices'.format(hub, group, project)
     return '/Backends'
 
