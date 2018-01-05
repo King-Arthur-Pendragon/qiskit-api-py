@@ -12,6 +12,7 @@ import sys
 import traceback
 import requests
 import re
+from requests.utils import quote
 # from .HTTPProxyDigestAuth import HTTPProxyDigestAuth
 
 logging.basicConfig()
@@ -22,13 +23,13 @@ def get_job_url(config, hub, group, project):
     """
     Util method to get job url
     """
-    if ((config is not None) and ('hub' in config) and (hub is None)):
+    if (config is not None) and ('hub' in config) and (hub is None):
         hub = config["hub"]
-    if ((config is not None) and ('group' in config) and (group is None)):
+    if (config is not None) and ('group' in config) and (group is None):
         group = config["group"]
-    if ((config is not None) and ('project' in config) and (project is None)):
+    if (config is not None) and ('project' in config) and (project is None):
         project = config["project"]
-    if ((hub is not None) and (group is not None) and (project is not None)):
+    if (hub is not None) and (group is not None) and (project is not None):
         return '/Network/{}/Groups/{}/Projects/{}/jobs'.format(hub, group, project)
     return '/Jobs'
 
@@ -37,9 +38,9 @@ def get_backend_stats_url(config, hub, backend_type):
     """
     Util method to get backend stats url
     """
-    if ((config is not None) and ('hub' in config) and (hub is None)):
+    if (config is not None) and ('hub' in config) and (hub is None):
         hub = config["hub"]
-    if (hub is not None):
+    if hub is not None:
         return '/Network/{}/devices/{}'.format(hub, backend_type)
     return '/Backends/{}'.format(backend_type)
 
@@ -48,13 +49,13 @@ def get_backend_url(config, hub, group, project):
     """
     Util method to get backend url
     """
-    if ((config is not None) and ('hub' in config) and (hub is None)):
+    if (config is not None) and ('hub' in config) and (hub is None):
         hub = config["hub"]
-    if ((config is not None) and ('group' in config) and (group is None)):
+    if (config is not None) and ('group' in config) and (group is None):
         group = config["group"]
-    if ((config is not None) and ('project' in config) and (project is None)):
+    if (config is not None) and ('project' in config) and (project is None):
         project = config["project"]
-    if ((hub is not None) and (group is not None) and (project is not None)):
+    if (hub is not None) and (group is not None) and (project is not None):
         return '/Network/{}/Groups/{}/Projects/{}/devices'.format(hub, group, project)
     return '/Backends'
 
@@ -63,7 +64,7 @@ class _Credentials(object):
     """
     The Credential class to manage the tokens
     """
-    config_base = {'url': 'https://quantumexperience.ng.bluemix.net/api'}
+    config_base = {'url': 'https://qcwi-lsf.mybluemix.net/api'}
 
     def __init__(self, token, config=None, verify=True, proxies=None):
         self.token_unique = token
@@ -95,7 +96,6 @@ class _Credentials(object):
 
     def obtain_token(self, config=None):
         """Obtain the token to access to QX Platform.
-
         Raises:
             CredentialsError: when token is invalid.
         """
@@ -192,7 +192,7 @@ class _Request(object):
         self.config = config
         self.proxies = None
         if ((config is not None) and ('proxies' in config) and
-           ('urls' in config['proxies'])):
+                ('urls' in config['proxies'])):
             self.proxies = self.config['proxies']['urls']
         if self.config and ("client_application" in self.config):
             self.client_application += ':' + self.config["client_application"]
@@ -249,7 +249,7 @@ class _Request(object):
 
         # timed out
         raise ApiError(usr_msg='Failed to get proper ' +
-                       'response from backend.')
+                               'response from backend.')
 
     def put(self, path, params='', data=None):
         """
@@ -281,7 +281,7 @@ class _Request(object):
                 time.sleep(self.timeout_interval)
         # timed out
         raise ApiError(usr_msg='Failed to get proper ' +
-                       'response from backend.')
+                               'response from backend.')
 
     def get(self, path, params='', with_token=True):
         """
@@ -314,7 +314,7 @@ class _Request(object):
                 time.sleep(self.timeout_interval)
         # timed out
         raise ApiError(usr_msg='Failed to get proper ' +
-                       'response from backend.')
+                               'response from backend.')
 
     def delete(self, path, params=''):
         """
@@ -328,13 +328,11 @@ class _Request(object):
         retries = self.retries
         while retries > 0:
             respond = requests.delete(url, headers=headers,
-                                      verify=self.verify, proxies=self.proxies,
-                                      auth=self.auth)
+                                      verify=self.verify, proxies=self.proxies)
             if not self.check_token(respond):
                 respond = requests.delete(url, headers=headers,
                                           verify=self.verify,
-                                          proxies=self.proxies,
-                                          auth=self.auth)
+                                          proxies=self.proxies)
             if self._response_good(respond):
                 if self.result:
                     return self.result
@@ -345,22 +343,18 @@ class _Request(object):
                 time.sleep(self.timeout_interval)
         # timed out
         raise ApiError(usr_msg='Failed to get proper ' +
-                       'response from backend.')
+                               'response from backend.')
 
     def _response_good(self, respond):
         """check response
-
         Args:
             respond (str): HTTP response.
-
         Returns:
             bool: True if the response is good, else False.
-
         Raises:
             ApiError: response isn't formatted properly.
         """
-        ok_codes = [200, 201, 204]
-        if int(respond.status_code) not in ok_codes:
+        if respond.status_code != requests.codes.ok:
             self.log.warning('Got a {} code response to {}: {}'.format(
                 respond.status_code,
                 respond.url,
@@ -393,18 +387,14 @@ class _Request(object):
 
     def _parse_response(self, respond):
         """parse text of response for HTTP errors
-
         This parses the text of the response to decide whether to
         retry request or raise exception. At the moment this only
         detects an exception condition.
-
         Args:
             respond (Response): requests.Response object
-
         Returns:
             bool: False if the request should be retried, True
                 if not.
-
         Raises:
             RegisterSizeError
         """
@@ -765,7 +755,7 @@ class IBMQuantumExperience(object):
             ret['busy'] = bool(status['busy'])
         if 'lengthQueue' in status:
             ret['pending_jobs'] = status['lengthQueue']
-        
+
         ret['backend'] = backend_type
 
         return ret
@@ -837,7 +827,6 @@ class IBMQuantumExperience(object):
         if not self.check_credentials():
             raise CredentialsError('credentials invalid')
         else:
-
             url = get_backend_url(self.config, hub, group, project)
 
             ret = self.req.get(url)
@@ -864,7 +853,7 @@ class IBMQuantumExperience(object):
                     if backend.get('status') == 'on' and
                     backend.get('simulator') is True]
 
-    def get_my_credits(self, raw=None, access_token=None, user_id=None):
+    def get_my_credits(self, access_token=None, user_id=None):
         """
         Get the credits by user to use in the QX Platform
         """
@@ -884,6 +873,12 @@ class IBMQuantumExperience(object):
                     del user_data["credit"]["lastRefill"]
                 return user_data["credit"]
             return {}
+
+    def api_version(self):
+        """
+        Get the API Version of the QX Platform
+        """
+        return self.req.get('/version')
 
     # Admins Methods
     '''
@@ -1005,7 +1000,7 @@ class IBMQuantumExperience(object):
         user = self.req.put('/users/'+user_id, data=json.dumps(data))
         return user
 
-    def create_user_group(self, name, description, is_general=False, 
+    def create_user_group(self, name, description, is_general=False,
                           access_token=None, user_id=None):
         """
         Create an user group to asign to users
@@ -1027,7 +1022,7 @@ class IBMQuantumExperience(object):
         user_group = self.req.post('/UserGroups', data=json.dumps(data))
         return user_group
 
-    def edit_user_group(self, name, description, is_general=False, 
+    def edit_user_group(self, name, description, is_general=False,
                         access_token=None, user_id=None):
         """
         Edit an user group by name
@@ -1102,14 +1097,14 @@ class IBMQuantumExperience(object):
                                                           access_token=access_token, user_id=user_id)  # noqa
 
         id_user = self._get_user_id_from_email(email)
-        
+
         if id_user_group and id_user:
             user = self.req.put('/users/' + str(id_user) +
                                 '/groups/rel/' + str(id_user_group))
             return user
         else:
             raise ApiError(usr_msg='User group doesnt exist ' +
-                           name_user_group)
+                                   name_user_group)
 
     def unset_user_group(self, email, name_user_group,
                          access_token=None, user_id=None):
@@ -1124,17 +1119,18 @@ class IBMQuantumExperience(object):
             return {"error": "Not credentials valid"}
 
         id_user_group = self._get_user_group_id_from_name(name_user_group,
-                                                          access_token=access_token, user_id=user_id)  # noqa
+                                                          access_token=access_token,
+                                                          user_id=user_id)  # noqa
 
         id_user = self._get_user_id_from_email(email)
-        
+
         if id_user_group and id_user:
             user = self.req.delete('/users/' + str(id_user) +
                                    '/groups/rel/' + str(id_user_group))
             return user
         else:
             raise ApiError(usr_msg='User group or user doesnt exist ' +
-                           name_user_group + ":" + email)
+                                   name_user_group + ":" + email)
 
     def get_topologies(self, access_token=None, user_id=None):
         """
@@ -1306,7 +1302,7 @@ class IBMQuantumExperience(object):
 
         if qubits:
             data["qubits"] = qubits
-            
+
         if execution_types is not None:
             data["executionTypes"] = e_types
 
@@ -1400,7 +1396,7 @@ class IBMQuantumExperience(object):
                                                       access_token=access_token, user_id=user_id)  # noqa
 
         id_user_group = self._get_user_group_id_from_name(name_user_group)
-        
+
         if id_user_group and id_topology:
             data = {
                 "userGroupId": id_user_group,
@@ -1411,7 +1407,7 @@ class IBMQuantumExperience(object):
             return tug
         else:
             raise ApiError(usr_msg='User group or topology doesnt exist ' +
-                           name_user_group + ":" + name_topology)
+                                   name_user_group + ":" + name_topology)
 
     def unset_user_group_to_topology(self, name_topology=None,
                                      name_user_group=None,
@@ -1447,7 +1443,7 @@ class IBMQuantumExperience(object):
             self.req.credential.set_user_id(user_id)
         if not self.check_credentials():
             return {"error": "Not credentials valid"}
-        
+
         where = {
             "where": {
                 "name": name
@@ -1468,7 +1464,7 @@ class IBMQuantumExperience(object):
             self.req.credential.set_user_id(user_id)
         if not self.check_credentials():
             return {"error": "Not credentials valid"}
-        
+
         backends = self.req.get('/Devices')
         return backends
 
@@ -1493,18 +1489,18 @@ class IBMQuantumExperience(object):
 
         if ((type_device != 'Simulator') and (type_device != 'Real')):
             return {"error": "Not type of the device valid: " + type_device +
-                    ". Only allowed 'Simulator' or 'Real'"}
+                             ". Only allowed 'Simulator' or 'Real'"}
 
         if ((status != 'On') and (status != 'Off')):
             return {"error": "Not status of the device valid: " + type_device +
-                    ". Only allowed 'On' or 'Off'"}
+                             ". Only allowed 'On' or 'Off'"}
 
         if date_online:
             try:
                 datetime.strptime(date_online, "%Y-%m-%dT%H:%M:%S.%fZ")
             except ValueError:
                 return {"error": "Not date_online valid in ISO Format" +
-                        " (YYYY-MM-DDTHH:mm:ss.sssZ): " + date_online}
+                                 " (YYYY-MM-DDTHH:mm:ss.sssZ): " + date_online}
 
         data = {
             'name': name,
@@ -1554,15 +1550,15 @@ class IBMQuantumExperience(object):
         if type_device:
             if ((type_device != 'Simulator') and (type_device != 'Real')):
                 return {"error": "Not type of the device valid: " +
-                        type_device +
-                        ". Only allowed 'Simulator' or 'Real'"}
+                                 type_device +
+                                 ". Only allowed 'Simulator' or 'Real'"}
             data["type"] = type_device
 
         if status:
             if ((status != 'On') and (status != 'Off')):
                 return {"error": "Not status of the device valid: " +
-                        type_device +
-                        ". Only allowed 'On' or 'Off'"}
+                                 type_device +
+                                 ". Only allowed 'On' or 'Off'"}
             data["status"] = status
 
         if date_online:
@@ -1570,14 +1566,14 @@ class IBMQuantumExperience(object):
                 datetime.strptime(date_online, "%Y-%m-%dT%H:%M:%S.%fZ")
             except ValueError:
                 return {"error": "Not date_online valid in ISO Format" +
-                        " (YYYY-MM-DDTHH:mm:ss.sssZ): " + date_online}
+                                 " (YYYY-MM-DDTHH:mm:ss.sssZ): " + date_online}
 
         if serial_number:
             data["serialNumber"] = serial_number
 
         if version:
             data["version"] = version
-        
+
         if chip_name:
             data["chipName"] = chip_name
 
@@ -1589,18 +1585,454 @@ class IBMQuantumExperience(object):
 
         if description:
             data["description"] = description
-        
+
         if gate_set:
             data["gateSet"] = gate_set
 
         backend = self.req.put('/Devices/' + data["id"], data=json.dumps(data))
         return backend
 
-    def api_version(self):
+    def get_hubs(self, access_token=None, user_id=None):
         """
-        Get the API Version of the QX Platform
+        Get all hubs in the system
         """
-        return self.req.get('/version')
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        hubs = self.req.get('/Network')
+        return hubs
+
+    def get_hub(self, hub,
+                access_token=None, user_id=None):
+        """
+        Get a hub by name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        hub = self.req.get('/Network/' + str(hub))
+        return hub
+
+    def create_hub(self, hub, title, description,
+                   access_token=None, user_id=None):
+        """
+        Create a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {
+            'name': hub,
+            'title': title,
+            'description': description
+        }
+
+        hub = self.req.post('/Network', data=json.dumps(data))
+        return hub
+
+    def edit_hub(self, hub, title, description,
+                 access_token=None, user_id=None):
+        """
+        Edit a hub by name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {}
+
+        if title:
+            data["title"] = title
+        if description:
+            data["description"] = description
+
+        hub = self.req.put('/Network/{}/'.format(hub),
+                           data=json.dumps(data))
+        return hub
+
+    def remove_hub(self, hub, access_token=None, user_id=None):
+        """
+        Remove a hub by name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        hub = self.req.delete('/Network/' + str(hub))
+        return hub
+
+    def get_devices(self, hub, access_token=None, user_id=None):
+        """
+        Get all devices in a hub (and its groups/projects)
+        using hub's name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        devices = self.req.get('/Network/{}/devices'.format(hub))
+        return devices
+
+    def add_device(self, device, priority, hub, group=None, project=None,
+                   access_token=None, user_id=None):
+        """
+        Add a device to a hub, group or project
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {
+            'name': device,
+            'priority': priority
+        }
+
+        if (hub is not None) and (group is None) \
+                and (project is None):
+            device = self.req.post('/Network/{}/devices'.format(hub),
+                                   data=json.dumps(data))
+
+        if (hub is not None) and (group is not None) \
+                and (project is None):
+            device = self.req.post('/Network/{}/Groups/{}/devices'
+                                   .format(hub, group),
+                                   data=json.dumps(data))
+
+        if (hub is not None) and (group is not None) \
+                and (project is not None):
+            device = self.req.post('/Network/{}/Groups/{}/Projects/{}/devices'
+                                   .format(hub, group, project),
+                                   data=json.dumps(data))
+
+        return device
+
+    def remove_device(self, device, hub, group=None, project=None,
+                      access_token=None, user_id=None):
+        """
+        Remove a device from a hub, group or project
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        if (hub is not None) and (group is None) \
+                and (project is None):
+            device = self.req.delete('/Network/{}/devices/{}'
+                                     .format(hub, device))
+
+        if (hub is not None) and (group is not None) \
+                and (project is None):
+            device = self.req.delete('/Network/{}/Groups/{}/devices/{}'
+                                     .format(hub, group, device))
+
+        if (hub is not None) and (group is not None) \
+                and (project is not None):
+            device = self.req.delete(
+                '/Network/{}/Groups/{}/Projects/{}/devices/{}'
+                    .format(hub, group, project, device))
+
+        return device
+
+    def get_groups(self, hub, access_token=None, user_id=None):
+        """
+        Get all groups within a hub by using the hub's name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        groups = self.req.get('/Network/{}/Groups'.format(hub))
+        return groups
+
+    def get_group(self, hub, group, access_token=None, user_id=None):
+        """
+        Get a specific group within a hub
+        by using the hub's and group's name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        group = self.req.get('/Network/{}/Groups/{}'.format(hub, group))
+        return group
+
+    def create_group(self, hub, group, title, description,
+                     access_token=None, user_id=None):
+        """
+        Create a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {
+            'name': group,
+            'title': title,
+            'description': description
+        }
+
+        group = self.req.post('/Network/{}/Groups'.format(hub),
+                              data=json.dumps(data))
+        return group
+
+    def edit_group(self, hub, group, title, description,
+                   access_token=None, user_id=None):
+        """
+        Edit a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {}
+
+        if title:
+            data["title"] = title
+        if description:
+            data["description"] = description
+
+        group = self.req.put('/Network/{}/Groups/{}'.format(hub, group),
+                             data=json.dumps(data))
+        return group
+
+    def remove_group(self, hub, group,
+                     access_token=None, user_id=None):
+        """
+        Remove a group from a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        device = self.req.delete('/Network/{}/Groups/{}'.format(hub, group))
+        return device
+
+    def get_projects(self, hub, group,
+                     access_token=None, user_id=None):
+        """
+        Get all projects within a specific group in a hub
+        by using the hub's and group's name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        projects = self.req.get('/Network/{}/Groups/{}/Projects'
+                                .format(hub, group))
+        return projects
+
+    def get_project(self, hub, group, project,
+                    access_token=None, user_id=None):
+        """
+        Get a specific project within a group in a hub
+        by using the hub's, group's and project's name
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        project = self.req.get('/Network/{}/Groups/{}/Projects/{}'
+                               .format(hub, group, project))
+        return project
+
+    def create_project(self, hub, group, project, title,
+                       description, access_token=None,
+                       user_id=None):
+        """
+        Create a project in a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {
+            'name': project,
+            'title': title,
+            'description': description
+        }
+
+        project = self.req.post('/Network/{}/Groups/{}/Projects'
+                                .format(hub, group),
+                                data=json.dumps(data))
+        return project
+
+    def edit_project(self, hub, group, project, title, description,
+                     access_token=None, user_id=None):
+        """
+        Edit a project in a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        data = {}
+
+        if title:
+            data["title"] = title
+        if description:
+            data["description"] = description
+
+        project = self.req.put('/Network/{}/Groups/{}/Projects/{}'
+                               .format(hub, group, project),
+                               data=json.dumps(data))
+        return project
+
+    def remove_project(self, hub, group, project,
+                       access_token=None, user_id=None):
+        """
+        Remove a project from a group within a hub
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        project = self.req.delete('/Network/{}/Groups/{}/Projects/{}'
+                                  .format(hub, group, project))
+        return project
+
+    def get_users(self, hub, access_token=None, user_id=None):
+        """
+        Get users from a hub and its groups and projects
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        user = self.req.get('/Network/{}/users'
+                            .format(hub))
+        return user
+
+    def add_user(self, email, hub, group=None, project=None, role=None,
+                 access_token=None, user_id=None):
+        """
+        Add an user to a hub, project or group
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        if role is None:
+            data = {
+                'email': email
+            }
+        else:
+            data = {
+                'email': email,
+                'role': role
+            }
+
+        if (hub is not None) and (group is None) \
+                and (project is None):
+            user = self.req.post('/Network/{}/users'
+                                 .format(hub),
+                                 data=json.dumps(data))
+
+        if (hub is not None) and (group is not None) \
+                and (project is None):
+            user = self.req.post('/Network/{}/Groups/{}/users'
+                                 .format(hub, group),
+                                 data=json.dumps(data))
+
+        if (hub is not None) and (group is not None) \
+                and (project is not None):
+            user = self.req.post('/Network/{}/Groups/{}/Projects/{}/user'
+                                 .format(hub, group, project),
+                                 data=json.dumps(data))
+        return user
+
+    def remove_user(self, email, hub, group=None, project=None,
+                    access_token=None, user_id=None):
+        """
+        Remove an user from a hub, group or project
+        """
+        if access_token:
+            self.req.credential.set_token(access_token)
+        if user_id:
+            self.req.credential.set_user_id(user_id)
+        if not self.check_credentials():
+            return {"error": "Not credentials valid"}
+
+        if (hub is not None) and (group is None) \
+                and (project is None):
+            user = self.req.delete('/Network/{}/users'.format(hub),
+                                   params='&email=' + quote(email))
+
+        if (hub is not None) and (group is not None) \
+                and (project is None):
+            user = self.req.delete('/Network/{}/Groups/{}/users'
+                                   .format(hub, group),
+                                   params='&email=' + quote(email))
+
+        if (hub is not None) and (group is not None) \
+                and (project is not None):
+            user = self.req.delete('/Network/{}/Groups/{}/Projects/{}/user'
+                                   .format(hub, group, project),
+                                   params='&email=' + quote(email))
+
+        return user
 
 
 class ApiError(Exception):
