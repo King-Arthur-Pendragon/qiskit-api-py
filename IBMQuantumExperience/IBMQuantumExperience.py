@@ -328,13 +328,11 @@ class _Request(object):
         retries = self.retries
         while retries > 0:
             respond = requests.delete(url, headers=headers,
-                                      verify=self.verify, proxies=self.proxies,
-                                      auth=self.auth)
+                                      verify=self.verify, proxies=self.proxies)
             if not self.check_token(respond):
                 respond = requests.delete(url, headers=headers,
                                           verify=self.verify,
-                                          proxies=self.proxies,
-                                          auth=self.auth)
+                                          proxies=self.proxies)
             if self._response_good(respond):
                 if self.result:
                     return self.result
